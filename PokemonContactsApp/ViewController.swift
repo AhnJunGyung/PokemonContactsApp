@@ -9,59 +9,58 @@ import UIKit
 import SnapKit
 
 class ViewController: UIViewController {
-        
-    private let label: UILabel = {
-        var label = UILabel()
-        label.text = "친구 목록"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
-        return label
-    }()
-    
-    private let button: UIButton = {
-        var button = UIButton()
-        button.setTitle("추가", for: .normal)
-        button.setTitleColor(.gray, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 20)
-        return button
-    }()
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.delegate = self //테이블뷰 속성 세팅을 self(ViewController)에 위임
         tableView.dataSource = self //데이터소스를 self(ViewController)에서 세팅
-        
         tableView.register(TableViewCell.self, forCellReuseIdentifier: TableViewCell.id)
-        
         return tableView
+    }()
+    
+    //네비게이션 바
+    let navigationBar: UINavigationBar = {
+        let navigationBar = UINavigationBar()
+        return navigationBar
     }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureNavigationBar()
         configureUI()
     }
 
     private func configureUI() {
-        view.addSubview(label)
-        view.addSubview(button)
+        view.backgroundColor = .white
+        view.addSubview(navigationBar)
         view.addSubview(tableView)
-        
-        label.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
-            $0.top.equalToSuperview().inset(80)
-        }
-        
-        button.snp.makeConstraints {
-            $0.centerY.equalTo(label)
-            $0.trailing.equalToSuperview().inset(30)
-        }
         
         tableView.snp.makeConstraints {
             $0.centerX.equalToSuperview()
-            $0.top.equalTo(label.snp.bottom).offset(50)
+            $0.top.equalToSuperview().offset(130)//Lv3 추가
             $0.bottom.equalToSuperview()
             $0.leading.equalToSuperview().inset(20)
             $0.trailing.equalToSuperview().inset(20)
         }
+    }
+    
+    private func configureNavigationBar() {
+        //네비게이션 아이템 생성
+        self.navigationItem.title = "친구 목록"
+
+        let rightButton = UIBarButtonItem(
+            title: "추가",
+            style: .plain,
+            target: self,
+            action: #selector(tapRightButton)
+        )
+        self.navigationItem.rightBarButtonItem = rightButton
+
+    }
+    
+    @objc
+    private func tapRightButton() {
+        self.navigationController?.pushViewController(PhoneBookViewController(), animated: true)
     }
 
 }
