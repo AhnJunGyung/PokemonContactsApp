@@ -14,6 +14,7 @@ class TableViewCell: UITableViewCell {
     
     private let nameLabel: UILabel = {
         var label = UILabel()
+        label.textColor = .black
         label.font = .systemFont(ofSize: 20)
         return label
     }()
@@ -28,7 +29,7 @@ class TableViewCell: UITableViewCell {
         var image = UIImageView()
         image.layer.cornerRadius = 35 //원형을 만들 경우 : width의 2분의 1
         image.layer.borderWidth = 2
-        image.layer.borderColor = UIColor.gray.cgColor
+        image.layer.borderColor = UIColor.lightGray.cgColor
         return image
     }()
     
