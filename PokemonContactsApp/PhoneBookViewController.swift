@@ -11,7 +11,11 @@ import Alamofire
 
 class PhoneBookViewController: UIViewController {
     
+    //이미지 url 저장 프로퍼티
     private var pokemonImageUrl: String = ""
+    
+    //데이터를 전달 받기 위한 배열
+    var contactsInfo: ContactsInfo?
     
     private let image: UIImageView = {
         var image = UIImageView()
@@ -50,6 +54,8 @@ class PhoneBookViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+
+        settingValue()
         configureUI()
         configureNavigationBar()
         
@@ -105,11 +111,12 @@ class PhoneBookViewController: UIViewController {
         
         self.navigationItem.rightBarButtonItem = rightButton
         
+        //TODO: 뒤로가기 버튼 눌렀을때 데이터 초기화 되도록 구현
+        
     }
     
     @objc
     private func applyButton() {
-        
         if createUserDefaults() {//데이터 저장을 성공한 경우
             //메인화면으로 이동
             self.navigationController?.popViewController(animated: true)
@@ -188,7 +195,7 @@ class PhoneBookViewController: UIViewController {
                 var contactsArray: [ContactsInfo] = contactsInfo
                 contactsArray.append(userInfo)
                 
-                //객체 배열을 인코딩해서 UserDefaults에 Create or Update
+                //객체 배열을 인코딩해서 UserDefaults에 Create or Update TODO: Update하기 위해 key, value확실히 구분 필요. 저장방식 변경
                 UserDefaults.standard.set(try? PropertyListEncoder().encode(contactsArray), forKey: "contactsArray")
                 
             } else {//contactsInfo 객체를 담은 배열이 없는 경우
@@ -199,7 +206,42 @@ class PhoneBookViewController: UIViewController {
             }
         }
         
+        //UI입력 데이터 초기화
+        clearValue()
+        
         return true
+    }
+    
+    private func settingValue() {
+        nameTextView.text = contactsInfo?.name
+        phoneNumberTextView.text = contactsInfo?.phoneNumber
+        
+        //이미지 로드 작업
+        if let pokemonImage =  contactsInfo?.pokemonImage {
+            AF.request(pokemonImage).responseData { response in
+                if let data = response.data, let image = UIImage(data: data) {
+                    
+                    DispatchQueue.main.async {
+                        self.image.image = image
+                    }
+                }
+            }
+        }
+    }
+    
+    //UI입력 데이터 초기화
+    private func clearValue() {
+        nameTextView.text = nil
+        phoneNumberTextView.text = nil
+        image.image = nil
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        clearValue()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        settingValue()
     }
     
 }
