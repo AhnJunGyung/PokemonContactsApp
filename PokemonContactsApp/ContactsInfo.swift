@@ -7,27 +7,17 @@
 
 import UIKit
 
-class ContactsInfo {
-    var image: UIImage? {
-        return UIImage(named: name)
-    }
+struct ContactsInfo:Codable {
+
+    var pokemonImage: String
     var name: String
     var phoneNumber: String
     
-    init(name: String, phoneNumber: String) {
+    
+    init(name: String, phoneNumber: String, pokemonImage: String) {
         self.name = name
         self.phoneNumber = phoneNumber
+        self.pokemonImage = pokemonImage
     }
-    
-    
 }
 
-//TODO: 데이터 작업
-extension ContactsInfo{
-    static let sampleData: [ContactsInfo] = [
-        ContactsInfo(name: "Alex", phoneNumber: "010-1111-2222"),
-        ContactsInfo(name: "Alex", phoneNumber: "010-1111-2222"),
-        ContactsInfo(name: "Alex", phoneNumber: "010-1111-2222"),
-        ContactsInfo(name: "Alex", phoneNumber: "010-1111-2222")
-    ]
-}

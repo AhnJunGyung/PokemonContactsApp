@@ -10,6 +10,8 @@ import SnapKit
 
 class ViewController: UIViewController {
     
+    private var contactsInfo: [ContactsInfo] = []//연락처 구조체
+   
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.delegate = self //테이블뷰 속성 세팅을 self(ViewController)에 위임
@@ -26,6 +28,7 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         configureNavigationBar()
         configureUI()
     }
@@ -34,10 +37,10 @@ class ViewController: UIViewController {
         view.backgroundColor = .white
         view.addSubview(navigationBar)
         view.addSubview(tableView)
-        
+
         tableView.snp.makeConstraints {
             $0.centerX.equalToSuperview()
-            $0.top.equalToSuperview().offset(130)//Lv3 추가
+            $0.top.equalToSuperview().offset(130)
             $0.bottom.equalToSuperview()
             $0.leading.equalToSuperview().inset(20)
             $0.trailing.equalToSuperview().inset(20)
@@ -62,6 +65,11 @@ class ViewController: UIViewController {
     private func tapRightButton() {
         self.navigationController?.pushViewController(PhoneBookViewController(), animated: true)
     }
+    
+    //연락처 입력 후 다시 뷰가 열렸을 때
+    override func viewDidAppear(_ animated: Bool) {
+        tableView.reloadData()
+    }
 
 }
 
@@ -77,13 +85,29 @@ extension ViewController: UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TableViewCell.id) as? TableViewCell else {
             return UITableViewCell()
         }
-        //TODO: 데이터 작업
-        cell.configureCell(ContactsInfo.sampleData[indexPath.row])
+        
+        let data = dataRead()
+        
+        cell.configureCell(data[indexPath.row])
+        
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return ContactsInfo.sampleData.count//TODO: 데이터 작업
+
+        return dataRead().count
     }
     
+}
+
+
+//UserDefault 데이터 읽어오기
+private func dataRead() -> [ContactsInfo]{
+    //Read
+    if let savedData = UserDefaults.standard.value(forKey: "contactsArray") as? Data, let contactsInfo = try? PropertyListDecoder().decode([ContactsInfo].self, from: savedData) {
+        
+        return contactsInfo
+    }
+    
+    return []
 }
