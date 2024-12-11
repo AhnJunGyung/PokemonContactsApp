@@ -11,7 +11,7 @@ import SnapKit
 class ViewController: UIViewController {
     
     //연락처 구조체
-    private var contactsInfo: [[String: ContactsInfo]] = [[:]]
+    private var contactsInfo: [[String: ContactsInfo]]?
     
     //뷰컨트롤러 최초 한 번 생성(뷰 재활용)
     private let phoneBookViewController = PhoneBookViewController()
@@ -32,12 +32,6 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        //UserDefaults 초기화 코드
-        //        for key in UserDefaults.standard.dictionaryRepresentation().keys {
-        //            UserDefaults.standard.removeObject(forKey: key.description)
-        //        }
-        
         dataRead()
         configureNavigationBar()
         configureUI()
@@ -97,9 +91,8 @@ class ViewController: UIViewController {
                 })
                 
                 let dictionaryArray: [[String: ContactsInfo]] = sortedData
-                
+
                 contactsInfo = dictionaryArray
-                
             }
         }
     }
@@ -118,22 +111,30 @@ extension ViewController: UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TableViewCell.id) as? TableViewCell else {
             return UITableViewCell()
         }
+        if let info = contactsInfo?[indexPath.row] {
+            cell.configureCell(info)
+        }
         
-        cell.configureCell(contactsInfo[indexPath.row])
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return contactsInfo.count
+        if let contactsCount = contactsInfo {
+            return contactsCount.count
+        } else {
+            return 0
+        }
     }
     
     //셀 클릭시 뷰 이동
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         //phoneBookViewController에 클릭한 셀 데이터 전달
-        phoneBookViewController.contactsInfo = contactsInfo[indexPath.row]
+        if let info = contactsInfo?[indexPath.row] {
+            phoneBookViewController.contactsInfo = info
+        }
         
         self.navigationController?.pushViewController(phoneBookViewController, animated: true)
     }
