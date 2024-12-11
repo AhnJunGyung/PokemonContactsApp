@@ -7,9 +7,12 @@
 
 import UIKit
 import SnapKit
+import Alamofire
 
 class PhoneBookViewController: UIViewController {
-        
+    
+    private var pokemonImageUrl: String = ""
+    
     private let image: UIImageView = {
         var image = UIImageView()
         image.layer.cornerRadius = 80 //원형을 만들 경우 : width의 2분의 1
@@ -47,8 +50,10 @@ class PhoneBookViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        configureNavigationBar()
         configureUI()
+        configureNavigationBar()
+        
+        makeImageButton.addTarget(self, action: #selector(makeRandomImageButton), for: .touchUpInside)
     }
     
     private func configureUI() {
@@ -90,22 +95,114 @@ class PhoneBookViewController: UIViewController {
     private func configureNavigationBar() {
         //네비게이션 아이템 생성
         self.navigationItem.title = "연락처 추가"
-        self.navigationItem.leftBarButtonItem?.title = "Back"
-
+        
         let rightButton = UIBarButtonItem(
             title: "적용",
             style: .plain,
             target: self,
-            action: #selector(tapRightButton)
+            action: #selector(applyButton)
         )
         
         self.navigationItem.rightBarButtonItem = rightButton
-
+        
     }
     
     @objc
-    private func tapRightButton() {
-        print("적용")//TODO: 적용 기능 개발
+    private func applyButton() {
+        
+        if createUserDefaults() {//데이터 저장을 성공한 경우
+            //메인화면으로 이동
+            self.navigationController?.popViewController(animated: true)
+        }
+    }
+    
+    @objc
+    private func makeRandomImageButton() {
+        fetchPokemonData()
+    }
+    
+    //Alamofire 서버데이터 호출
+    private func fetchDataByAlamofire<T: Decodable>(url: URL, completion: @escaping (Result<T, AFError>) -> Void) {
+        AF.request(url).responseDecodable(of: T.self) { response in
+            completion(response.result)
+        }
+    }
+    
+    //서버에서 포켓몬 데이터 호출
+    private func fetchPokemonData() {
+        //랜덤한 포켓몬 데이터를 가져오도록 url에 랜덤함수 적용
+        let urlComponents = URLComponents(string: "https://pokeapi.co/api/v2/pokemon/\(Int.random(in: 0...1000))")
+        
+        guard let url = urlComponents?.url else {
+            print("잘못된 url")
+            return
+        }
+        
+        fetchDataByAlamofire(url: url) { [weak self] (result: Result<Welcome, AFError>) in
+            guard let self else { return }
+            switch result {
+            case .success(let result):
+                
+                //Create 할 때 사용하기 위한 저장용 이미지 URL
+                pokemonImageUrl = result.sprites.frontDefault
+                
+                //이미지 URL 세팅
+                guard let imageUrl = URL(string: "\(result.sprites.frontDefault)") else {
+                    return
+                }
+                
+                //이미지 로드 작업
+                AF.request(imageUrl).responseData { response in
+                    if let data = response.data, let image = UIImage(data: data) {
+                        
+                        //UI작업 메인쓰레드에서 실행
+                        DispatchQueue.main.async {
+                            self.image.image = image
+                        }
+                    }
+                }
+                
+            case .failure(let error):
+                print("데이터 로드 실패: \(error)")
+            }
+        }
+    }
+    
+    //데이터 저장
+    private func createUserDefaults() -> Bool {
+        
+        //텍스트뷰에 값 없을경우 예외처리
+        guard !nameTextView.text.isEmpty && !phoneNumberTextView.text.isEmpty else {
+            return false
+        }
+        
+        //구조체 생성
+        let userInfo = ContactsInfo(name: nameTextView.text, phoneNumber: phoneNumberTextView.text, pokemonImage: pokemonImageUrl)
+        
+        //딕셔너리를 담는 배열 생성
+        
+        
+        //Read
+        if let savedData = UserDefaults.standard.value(forKey: "contactsArray") as? Data,
+           let contactsInfo = try? PropertyListDecoder().decode([ContactsInfo].self, from: savedData) {
+            
+            //배열이 있는 경우
+            if contactsInfo.count > 0 {
+                var contactsArray: [ContactsInfo] = contactsInfo
+                contactsArray.append(userInfo)
+                
+                //객체 배열을 인코딩해서 UserDefaults에 Create or Update
+                UserDefaults.standard.set(try? PropertyListEncoder().encode(contactsArray), forKey: "contactsArray")
+                
+            } else {//배열이 없는 경우
+                let contactsArray: [ContactsInfo] = [userInfo]//구조체 배열 생성
+                
+                //객체 배열을 인코딩해서 UserDefaults에 Create
+                UserDefaults.standard.set(try? PropertyListEncoder().encode(contactsArray), forKey: "contactsArray")
+            }
+        }
+        
+        return true
     }
     
 }

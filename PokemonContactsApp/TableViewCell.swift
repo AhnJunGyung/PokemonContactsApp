@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Alamofire
 
 class TableViewCell: UITableViewCell {
     
@@ -69,11 +70,24 @@ class TableViewCell: UITableViewCell {
         }
     }
     
-    public func configureCell(_ data: ContactsInfo) {
+    public func configureCell(_ contactsInfo: ContactsInfo) {
         //TODO: 데이터 작업
-        image.image = data.image
-        nameLabel.text = data.name
-        phoneNumberLabel.text = data.phoneNumber
+
+        nameLabel.text = contactsInfo.name
+        phoneNumberLabel.text = contactsInfo.phoneNumber
+        
+        //이미지 URL 세팅
+        //Alamofire를 통해 URL에서 이미지로 변환
+        AF.request(contactsInfo.pokemonImage).responseData { response in
+            if let data = response.data, let image = UIImage(data: data) {
+                
+                //UI작업 메인쓰레드에서 실행
+                DispatchQueue.main.async {
+                    self.image.image = image
+                }
+            }
+        }
+        
     }
     
 }
