@@ -71,7 +71,6 @@ class TableViewCell: UITableViewCell {
     }
     
     public func configureCell(_ contactsInfo: ContactsInfo) {
-        //TODO: 데이터 작업
 
         nameLabel.text = contactsInfo.name
         phoneNumberLabel.text = contactsInfo.phoneNumber

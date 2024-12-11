@@ -28,7 +28,6 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         configureNavigationBar()
         configureUI()
     }
@@ -86,7 +85,10 @@ extension ViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        let data = dataRead()
+        var data = dataRead()
+        
+        //연락처 이름순으로 정렬
+        data = data.sorted(by: {$0.name < $1.name})
         
         cell.configureCell(data[indexPath.row])
         

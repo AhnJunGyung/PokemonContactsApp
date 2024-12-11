@@ -176,17 +176,14 @@ class PhoneBookViewController: UIViewController {
             return false
         }
         
-        //구조체 생성
+        //데이터(이름, 전화번호, 이미지 URL)를 담은 구조체 생성
         let userInfo = ContactsInfo(name: nameTextView.text, phoneNumber: phoneNumberTextView.text, pokemonImage: pokemonImageUrl)
-        
-        //딕셔너리를 담는 배열 생성
-        
-        
+
         //Read
         if let savedData = UserDefaults.standard.value(forKey: "contactsArray") as? Data,
            let contactsInfo = try? PropertyListDecoder().decode([ContactsInfo].self, from: savedData) {
             
-            //배열이 있는 경우
+            //contactsInfo 객체를 담은 배열이 있는 경우
             if contactsInfo.count > 0 {
                 var contactsArray: [ContactsInfo] = contactsInfo
                 contactsArray.append(userInfo)
@@ -194,7 +191,7 @@ class PhoneBookViewController: UIViewController {
                 //객체 배열을 인코딩해서 UserDefaults에 Create or Update
                 UserDefaults.standard.set(try? PropertyListEncoder().encode(contactsArray), forKey: "contactsArray")
                 
-            } else {//배열이 없는 경우
+            } else {//contactsInfo 객체를 담은 배열이 없는 경우
                 let contactsArray: [ContactsInfo] = [userInfo]//구조체 배열 생성
                 
                 //객체 배열을 인코딩해서 UserDefaults에 Create
