@@ -174,14 +174,14 @@ class PhoneBookViewController: UIViewController {
     //데이터 저장
     private func createUserDefaults() -> Bool {
         
-        //텍스트뷰에 값 없을경우 예외처리
+        //텍스트뷰에 값 없을 경우 예외처리
         guard !nameTextView.text.isEmpty && !phoneNumberTextView.text.isEmpty else {
             return false
         }
         
         //데이터(이름, 전화번호, 이미지 URL)를 담은 구조체 생성
         let userInfo = ContactsInfo(name: nameTextView.text, phoneNumber: phoneNumberTextView.text, pokemonImage: pokemonImageUrl)
-        let dictionary: [String: ContactsInfo] = [userInfo.name: userInfo]
+        let dictionaryUserInfo: [String: ContactsInfo] = [userInfo.name: userInfo]
         
         
         //Read
@@ -190,9 +190,13 @@ class PhoneBookViewController: UIViewController {
                 
                 //decodedData에 값이 존재하는 경우
                 var dictionaryArray: [[String: ContactsInfo]] = decodedData
-                dictionaryArray.append(dictionary)
                 
-                //TODO: 배열에 값을 제거하고 추가
+                
+                //배열에 이름과 같은 값을 가진 배열 제거
+                dictionaryArray = dictionaryArray.filter { dictionary in
+                    !dictionary.keys.contains(userInfo.name)
+                }
+                dictionaryArray.append(dictionaryUserInfo)//값을 새로 추가
                 
                 //배열을 인코딩해서 UserDefaults에 Update
                 UserDefaults.standard.set(try? PropertyListEncoder().encode(dictionaryArray), forKey: "userInfoDicionaty")
@@ -200,7 +204,7 @@ class PhoneBookViewController: UIViewController {
             }
         } else {
             //decodedData에 값이 없는 경우
-            let dictionaryArray: [[String: ContactsInfo]] = [dictionary]
+            let dictionaryArray: [[String: ContactsInfo]] = [dictionaryUserInfo]
             
             //배열을 인코딩해서 UserDefaults에 Create
             UserDefaults.standard.set(try? PropertyListEncoder().encode(dictionaryArray), forKey: "userInfoDicionaty")

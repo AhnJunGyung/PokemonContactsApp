@@ -8,16 +8,17 @@
 import UIKit
 
 struct ContactsInfo:Codable {
-
+    
     var pokemonImage: String
     var name: String
     var phoneNumber: String
-    
     
     init(name: String, phoneNumber: String, pokemonImage: String) {
         self.name = name
         self.phoneNumber = phoneNumber
         self.pokemonImage = pokemonImage
     }
+    
+    
 }
 
