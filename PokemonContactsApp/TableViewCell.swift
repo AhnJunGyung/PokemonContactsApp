@@ -70,14 +70,25 @@ class TableViewCell: UITableViewCell {
         }
     }
     
-    public func configureCell(_ contactsInfo: ContactsInfo) {
+    public func configureCell(_ dictionary: [String: ContactsInfo]) {
 
-        nameLabel.text = contactsInfo.name
-        phoneNumberLabel.text = contactsInfo.phoneNumber
+        let contactsInfo = dictionary.values
+        var name: String = ""
+        var phoneNumber: String = ""
+        var pokemonImage: String = ""
+        
+        for value in contactsInfo {
+            name = value.name
+            phoneNumber = value.phoneNumber
+            pokemonImage = value.pokemonImage
+        }
+
+        nameLabel.text = name
+        phoneNumberLabel.text = phoneNumber
         
         //이미지 URL 세팅
         //Alamofire를 통해 URL에서 이미지로 변환
-        AF.request(contactsInfo.pokemonImage).responseData { response in
+        AF.request(pokemonImage).responseData { response in
             if let data = response.data, let image = UIImage(data: data) {
                 
                 //UI작업 메인쓰레드에서 실행

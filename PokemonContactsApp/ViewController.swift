@@ -11,15 +11,11 @@ import SnapKit
 class ViewController: UIViewController {
     
     //연락처 구조체
-    private var contactsInfo: [ContactsInfo] = [] {
-        didSet {
-            tableView.reloadData()
-        }
-    }
+    private var contactsInfo: [[String: ContactsInfo]] = [[:]]
     
     //뷰컨트롤러 최초 한 번 생성(뷰 재활용)
     private let phoneBookViewController = PhoneBookViewController()
-   
+    
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.delegate = self //테이블뷰 속성 세팅을 self(ViewController)에 위임
@@ -33,20 +29,25 @@ class ViewController: UIViewController {
         let navigationBar = UINavigationBar()
         return navigationBar
     }()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //UserDefaults 초기화 코드
+        //        for key in UserDefaults.standard.dictionaryRepresentation().keys {
+        //            UserDefaults.standard.removeObject(forKey: key.description)
+        //        }
         
         dataRead()
         configureNavigationBar()
         configureUI()
     }
-
+    
     private func configureUI() {
         view.backgroundColor = .white
         view.addSubview(navigationBar)
         view.addSubview(tableView)
-
+        
         tableView.snp.makeConstraints {
             $0.centerX.equalToSuperview()
             $0.top.equalToSuperview().offset(130)
@@ -59,7 +60,7 @@ class ViewController: UIViewController {
     private func configureNavigationBar() {
         //네비게이션 아이템 생성
         self.navigationItem.title = "친구 목록"
-
+        
         let addButton = UIBarButtonItem(
             title: "추가",
             style: .plain,
@@ -67,7 +68,7 @@ class ViewController: UIViewController {
             action: #selector(tapAddButton)
         )
         self.navigationItem.rightBarButtonItem = addButton
-
+        
     }
     
     @objc
@@ -76,22 +77,33 @@ class ViewController: UIViewController {
     }
     
     //연락처 입력 후 다시 뷰가 열렸을 때
-    override func viewDidAppear(_ animated: Bool) {
+    override func viewIsAppearing(_ animated: Bool) {
         dataRead()
-        //tableView.reloadData()
+        tableView.reloadData()
     }
     
     //UserDefault 데이터 읽어오기
     private func dataRead(){
         //Read
-        if let savedData = UserDefaults.standard.value(forKey: "contactsArray") as? Data,
-           let decodedData = try? PropertyListDecoder().decode([ContactsInfo].self, from: savedData) {
-            
-            //데이터 정렬 후 구조체에 저장
-            self.contactsInfo = decodedData.sorted(by: {$0.name < $1.name})
+        if let savedData = UserDefaults.standard.value(forKey: "userInfoDicionaty") {//UserDefaults 디코딩
+            if let decodedData = try? PropertyListDecoder().decode([[String: ContactsInfo]].self, from: savedData as! Data) {
+                
+                //데이터 이름 기준으로 오름차순 정렬
+                let sortedData = decodedData.sorted(by: {
+                    if let data1 = $0.values.first, let data2 = $1.values.first  {
+                        return data1.name < data2.name
+                    }
+                    return false
+                })
+                
+                let dictionaryArray: [[String: ContactsInfo]] = sortedData
+                
+                contactsInfo = dictionaryArray
+                
+            }
         }
     }
-
+    
 }
 
 extension ViewController: UITableViewDelegate {
@@ -106,14 +118,14 @@ extension ViewController: UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TableViewCell.id) as? TableViewCell else {
             return UITableViewCell()
         }
-                
+        
         cell.configureCell(contactsInfo[indexPath.row])
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-
+        
         return contactsInfo.count
     }
     

@@ -14,8 +14,8 @@ class PhoneBookViewController: UIViewController {
     //이미지 url 저장 프로퍼티
     private var pokemonImageUrl: String = ""
     
-    //데이터를 전달 받기 위한 배열
-    var contactsInfo: ContactsInfo?
+    //데이터를 전달 받기 위한
+    var contactsInfo: [String: ContactsInfo]?
     
     private let image: UIImageView = {
         var image = UIImageView()
@@ -54,7 +54,7 @@ class PhoneBookViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-
+        
         settingValue()
         configureUI()
         configureNavigationBar()
@@ -100,8 +100,6 @@ class PhoneBookViewController: UIViewController {
     
     private func configureNavigationBar() {
         //네비게이션 아이템 생성
-        self.navigationItem.title = "연락처 추가"
-        
         let rightButton = UIBarButtonItem(
             title: "적용",
             style: .plain,
@@ -110,8 +108,6 @@ class PhoneBookViewController: UIViewController {
         )
         
         self.navigationItem.rightBarButtonItem = rightButton
-        
-        //TODO: 뒤로가기 버튼 눌렀을때 데이터 초기화 되도록 구현
         
     }
     
@@ -185,39 +181,51 @@ class PhoneBookViewController: UIViewController {
         
         //데이터(이름, 전화번호, 이미지 URL)를 담은 구조체 생성
         let userInfo = ContactsInfo(name: nameTextView.text, phoneNumber: phoneNumberTextView.text, pokemonImage: pokemonImageUrl)
-
-        //Read
-        if let savedData = UserDefaults.standard.value(forKey: "contactsArray") as? Data,
-           let contactsInfo = try? PropertyListDecoder().decode([ContactsInfo].self, from: savedData) {
-            
-            //contactsInfo 객체를 담은 배열이 있는 경우
-            if contactsInfo.count > 0 {
-                var contactsArray: [ContactsInfo] = contactsInfo
-                contactsArray.append(userInfo)
-                
-                //객체 배열을 인코딩해서 UserDefaults에 Create or Update TODO: Update하기 위해 key, value확실히 구분 필요. 저장방식 변경
-                UserDefaults.standard.set(try? PropertyListEncoder().encode(contactsArray), forKey: "contactsArray")
-                
-            } else {//contactsInfo 객체를 담은 배열이 없는 경우
-                let contactsArray: [ContactsInfo] = [userInfo]//구조체 배열 생성
-                
-                //객체 배열을 인코딩해서 UserDefaults에 Create
-                UserDefaults.standard.set(try? PropertyListEncoder().encode(contactsArray), forKey: "contactsArray")
-            }
-        }
+        let dictionary: [String: ContactsInfo] = [userInfo.name: userInfo]
         
-        //UI입력 데이터 초기화
-        clearValue()
+        
+        //Read
+        if let savedData = UserDefaults.standard.value(forKey: "userInfoDicionaty") {//UserDefaults 디코딩
+            if let decodedData = try? PropertyListDecoder().decode([[String: ContactsInfo]].self, from: savedData as! Data) {
+                
+                //decodedData에 값이 존재하는 경우
+                var dictionaryArray: [[String: ContactsInfo]] = decodedData
+                dictionaryArray.append(dictionary)
+                
+                //TODO: 배열에 값을 제거하고 추가
+                
+                //배열을 인코딩해서 UserDefaults에 Update
+                UserDefaults.standard.set(try? PropertyListEncoder().encode(dictionaryArray), forKey: "userInfoDicionaty")
+                
+            }
+        } else {
+            //decodedData에 값이 없는 경우
+            let dictionaryArray: [[String: ContactsInfo]] = [dictionary]
+            
+            //배열을 인코딩해서 UserDefaults에 Create
+            UserDefaults.standard.set(try? PropertyListEncoder().encode(dictionaryArray), forKey: "userInfoDicionaty")
+        }
         
         return true
     }
     
     private func settingValue() {
-        nameTextView.text = contactsInfo?.name
-        phoneNumberTextView.text = contactsInfo?.phoneNumber
         
-        //이미지 로드 작업
-        if let pokemonImage =  contactsInfo?.pokemonImage {
+        if let data = contactsInfo?.values {
+            var name: String = ""
+            var phoneNumber: String = ""
+            var pokemonImage: String = ""
+            
+            for value in data {
+                name = value.name
+                phoneNumber = value.phoneNumber
+                pokemonImage = value.pokemonImage
+            }
+            
+            nameTextView.text = name
+            phoneNumberTextView.text = phoneNumber
+            
+            //이미지 로드 작업
             AF.request(pokemonImage).responseData { response in
                 if let data = response.data, let image = UIImage(data: data) {
                     
@@ -227,21 +235,35 @@ class PhoneBookViewController: UIViewController {
                 }
             }
         }
-    }
-    
-    //UI입력 데이터 초기화
-    private func clearValue() {
-        nameTextView.text = nil
-        phoneNumberTextView.text = nil
-        image.image = nil
+        
     }
     
     override func viewDidDisappear(_ animated: Bool) {
-        clearValue()
+        //UI입력 데이터 초기화
+        nameTextView.text = nil
+        phoneNumberTextView.text = nil
+        image.image = nil
+        contactsInfo = nil
     }
     
     override func viewWillAppear(_ animated: Bool) {
         settingValue()
+    }
+    
+    
+    override func viewIsAppearing(_ animated: Bool) {
+        //메인 뷰에서 셀을 클릭한 경우
+        if let data = contactsInfo?.values {
+            var name: String = ""
+            
+            for value in data {
+                name = value.name
+            }
+            self.navigationItem.title = name
+            
+        } else {//추가 버튼을 클릭한 경우
+            self.navigationItem.title = "연락처 추가"
+        }
     }
     
 }
